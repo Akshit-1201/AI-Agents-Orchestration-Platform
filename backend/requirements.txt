@@ -1,0 +1,29 @@
+# Yuno Orchestration Platform — backend (Phase 1)
+# Pinned with lower bounds; pip resolves the latest 3.9-compatible release.
+# Plain `uvicorn` (not [standard]) to avoid compiled win32 wheel issues — the
+# stat-based reloader works without watchfiles, and websockets arrives in Phase 3.
+
+fastapi>=0.115,<1.0
+uvicorn>=0.30,<1.0
+sqlmodel>=0.0.22
+aiosqlite>=0.20
+greenlet>=3.0          # required by SQLAlchemy's async engine
+alembic>=1.13          # schema migrations (source of truth from Phase 1.5)
+pydantic-settings>=2.4
+
+# --- AI runtime (Phase 2) ---
+langgraph>=0.2                   # graph orchestration runtime
+langgraph-checkpoint-sqlite>=2.0 # AsyncSqliteSaver checkpointer
+langchain-core>=0.3
+langchain-google-genai>=2.0      # Gemini 2.5 Flash chat + embeddings (primary)
+langchain-ollama>=0.2            # Ollama/Qwen chat + embeddings (local fallback)
+langchain-text-splitters>=0.3    # RecursiveCharacterTextSplitter for ingestion
+langchain-chroma>=0.1            # vector store wrapper (pulls chromadb)
+chromadb>=0.5                    # local embedded vector DB (RAG)
+ddgs>=6.0                        # keyless web search (DuckDuckGo)
+pypdf>=4.0                       # PDF loading for RAG ingestion
+
+# --- dev / test ---
+pytest>=8.0
+pytest-asyncio>=0.24
+httpx>=0.27
