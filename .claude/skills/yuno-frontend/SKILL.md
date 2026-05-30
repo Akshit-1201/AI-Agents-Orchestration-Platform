@@ -8,7 +8,7 @@ description: "Build/edit the Yuno frontend (Phase 4): Next.js (App Router) + Typ
 Next.js (App Router) + TypeScript + Tailwind + **shadcn/ui** + **framer-motion**, with
 **@xyflow/react** (workflow builder), **TanStack Query** (REST), **react-hook-form + zod**
 (forms), **Recharts** (token/cost), and **openapi-typescript** (types from the backend
-`/openapi.json`). Full plan: `PHASE4_PLAN.md`. Node 18+ (verified Node 22). Dev on `:3000`;
+`/openapi.json`). Built + hardened (Phase 4 / 4.5); see `frontend/README.md` and `plan.md`. Node 18+ (verified Node 22). Dev on `:3000`;
 backend on `:8000` (CORS already allows `http://localhost:3000`).
 
 ## Make it beautiful — which tools to use, in order

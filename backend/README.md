@@ -66,9 +66,10 @@ persisted history, then streams live until the run reaches a terminal status.
 
 ## AI runtime (Phase 2) — `runtime/`
 
-- **LLM:** Gemini 2.5 Flash → Ollama/Qwen fallback. Set `GEMINI_API_KEY` in `.env`
-  and/or run Ollama (`ollama pull qwen2.5 nomic-embed-text`). Tests run fully offline
-  with `USE_FAKE_LLM=true` (a deterministic fake model + embeddings).
+- **LLM:** OpenAI GPT → Ollama/Qwen fallback (provider chosen by the agent's model name —
+  `gpt-*`/`o*` → OpenAI, else local Ollama). Set `OPENAI_API_KEY` in `.env` and/or run
+  Ollama (`ollama pull qwen2.5 nomic-embed-text`). Tests run fully offline with
+  `USE_FAKE_LLM=true` (a deterministic fake model + embeddings).
 - **Tools:** `web_search` (DuckDuckGo, keyless), `calculator`, `http_fetch`,
   `knowledge_search` (RAG). An agent only gets the tools listed in its `tools`.
 - **RAG:** a local **Chroma** vector store. Ingest documents (txt/md/pdf) then the

@@ -2,14 +2,16 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import delete as sa_delete
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from database import get_session
-from models import Run, RunStatus, Workflow, WorkflowNode
+from models import Run, RunStatus
 from runtime.executor import execute_run, schedule_run
 from schemas import RunCreate, RunRead, RunReadDetail
+from services.runs import workflow_runnable_reason
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -20,26 +22,10 @@ async def create_run(
     wait: bool = False,
     session: AsyncSession = Depends(get_session),
 ):
-    workflow = await session.get(Workflow, payload.workflow_id)
-    if workflow is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Workflow not found")
-
-    node_keys = set(
-        (
-            await session.exec(
-                select(WorkflowNode.node_key).where(
-                    WorkflowNode.workflow_id == payload.workflow_id
-                )
-            )
-        ).all()
-    )
-    if not node_keys:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Workflow has no nodes")
-    if not workflow.entry_node_key or workflow.entry_node_key not in node_keys:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Workflow has no valid entry_node_key; set it before running",
-        )
+    workflow, reason = await workflow_runnable_reason(session, payload.workflow_id)
+    if reason:
+        code = status.HTTP_404_NOT_FOUND if workflow is None else status.HTTP_400_BAD_REQUEST
+        raise HTTPException(code, reason)
 
     run = Run(workflow_id=payload.workflow_id, status=RunStatus.pending, input=payload.input)
     session.add(run)
@@ -71,8 +57,13 @@ async def list_runs(
     limit: int = 100,
     session: AsyncSession = Depends(get_session),
 ):
+    # Only one-shot runs here; chat-driven turns (chat_id set) live under their chat.
     result = await session.exec(
-        select(Run).order_by(Run.created_at.desc(), Run.id.desc()).offset(offset).limit(limit)
+        select(Run)
+        .where(Run.chat_id.is_(None))
+        .order_by(Run.created_at.desc(), Run.id.desc())
+        .offset(offset)
+        .limit(limit)
     )
     return result.all()
 
@@ -88,3 +79,14 @@ async def get_run(run_id: int, session: AsyncSession = Depends(get_session)):
     if run is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Run not found")
     return run
+
+
+@router.delete("/{run_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_run(run_id: int, session: AsyncSession = Depends(get_session)):
+    run = await session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Run not found")
+    # Raw DELETE so SQLite's ON DELETE CASCADE removes the run's messages/events without
+    # async ORM lazy-loading the relationships. ChannelSession.last_run_id is SET NULL.
+    await session.exec(sa_delete(Run).where(Run.id == run_id))
+    await session.commit()

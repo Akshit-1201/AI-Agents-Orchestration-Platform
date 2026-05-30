@@ -34,6 +34,7 @@ export default function EditAgentPage() {
 }
 
 function toCreate(agent: AgentCreate & { id: number; created_at: string }): AgentCreate {
-  const { id: _id, created_at: _c, ...rest } = agent;
+  // Drop the server-only fields; the form edits the AgentCreate shape.
+  const { id, created_at, ...rest } = agent;
   return rest;
 }

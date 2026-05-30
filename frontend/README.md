@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yuno — Frontend
 
-## Getting Started
+The web UI for the **Yuno AI Agents Orchestration Platform**: define configurable agents,
+wire them into workflows on a visual canvas, run them, and watch runs stream live.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, Turbopack) + **React 19** + **TypeScript**
+- **Tailwind v4** + **shadcn/ui** (base-nova preset — Base UI) + **framer-motion**
+- **@xyflow/react** (workflow builder) · **TanStack Query** (server state) ·
+  **react-hook-form + zod** (agent config) · **Recharts** (token/cost) · **sonner** (toasts)
+- Typed against the backend via **openapi-typescript** (`npm run gen:api`)
+
+Design language (dark-first, slate + green/indigo, IBM Plex Sans + JetBrains Mono) is defined in
+[`../design-system/yuno/MASTER.md`](../design-system/yuno/MASTER.md) and wired through `app/globals.css`.
+
+## Surfaces
+
+- **Dashboard** (`/`) — counts + recent runs.
+- **Agents** (`/agents`) — list + full config form (role, model, tools, skills, channels,
+  schedules, memory, interaction rules, guardrails, limits).
+- **Workflow builder** (`/workflows/[id]`) — React Flow canvas; drag agent nodes, draw
+  conditioned edges, mark the entry node; saved as one `PUT /workflows/{id}` (edges reference
+  `node_key`). **Run** auto-saves unsaved edits before starting.
+- **Runs** (`/runs`) — list + **live monitor** (`/runs/[id]`) that subscribes to
+  `WS /ws/runs/{id}` and renders messages, events, and token/cost as they stream.
+
+## Prerequisites
+
+- **Node 18+** (verified on Node 22)
+- The **backend** running on `http://127.0.0.1:8000` (see [`../backend/README.md`](../backend/README.md)).
+  For a fully offline UI walkthrough, start it with `USE_FAKE_LLM=true` (deterministic fake LLM,
+  no API keys needed).
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+
+# Point the app at the backend (defaults to http://127.0.0.1:8000 if unset).
+# echo "NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000" > .env.local
+
+npm run dev      # dev server on http://localhost:3000 (hot reload; no build needed for local use)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm run dev` is all you need to develop and test locally — it does **not** produce a build.
+`npm run build` / `npm run start` are only for a production bundle.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Purpose |
+|---|---|
+| `npm run dev` | Local dev server (Turbopack, hot reload) |
+| `npm run build` | Production build |
+| `npm run start` | Serve a production build |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint (Next core-web-vitals + React Compiler rules) |
+| `npm test` | Vitest (unit) — see below |
+| `npm run gen:api` | Regenerate `lib/api-types.ts` from the live backend `/openapi.json` |
 
-## Learn More
+> `gen:api` needs the backend running. The app ships hand-written domain types in `lib/types.ts`
+> so it builds offline; `gen:api` is a cross-check against the live OpenAPI schema.
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vitest + React Testing Library (jsdom). Tests favor extracted pure helpers so they stay fast and
+don't need React Flow or a real WebSocket:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `lib/ws.test.ts` — WS envelope reducer (`foldEnvelope`): dedupe, status, error.
+- `components/workflow/payload.test.ts` — `buildWorkflowPayload` mapping + dirty equality.
+- `components/agents/agent-form.test.tsx` — config form submit shape.
+- `lib/workflow.test.ts` — `isRunnable` guard.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm test          # run once
+npm run test:watch
+```

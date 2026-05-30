@@ -30,6 +30,11 @@ export function MessageTimeline({ messages }: { messages: WsMessageData[] }) {
                 >
                   {m.role}
                 </span>
+                {m.channel || m.direction !== "internal" ? (
+                  <span className="rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground ring-1 ring-inset ring-border">
+                    {m.channel ?? "channel"} · {m.direction}
+                  </span>
+                ) : null}
                 {m.source_node_key ? (
                   <span className="font-mono text-muted-foreground">
                     {m.source_node_key}

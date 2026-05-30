@@ -16,14 +16,14 @@ import {
   type Edge,
   type Node,
 } from "@xyflow/react";
-import { Bot, Flag, Play, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Bot, Flag, Play, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/common/form";
 import { AgentNode, type AgentNodeData } from "@/components/workflow/agent-node";
+import { buildWorkflowPayload } from "@/components/workflow/payload";
 import { useAgents, useUpdateWorkflow } from "@/lib/queries";
 import type { WorkflowDetail } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 const nodeTypes = { agent: AgentNode };
 
@@ -43,37 +43,41 @@ export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
   const [selNode, setSelNode] = useState<string | null>(null);
   const [selEdge, setSelEdge] = useState<string | null>(null);
   const initialized = useRef(false);
+  // JSON snapshot of the last-persisted graph; null until the canvas initializes.
+  const savedRef = useRef<string | null>(null);
 
   // Build the graph once agents are available (so node labels resolve).
   useEffect(() => {
     if (initialized.current || !agents) return;
     initialized.current = true;
-    setNodes(
-      workflow.nodes.map((n) => {
-        const a = agentsById.get(n.agent_id);
-        return {
-          id: n.node_key,
-          type: "agent",
-          position: { x: n.position_x, y: n.position_y },
-          data: {
-            agentId: n.agent_id,
-            name: a?.name ?? `#${n.agent_id}`,
-            role: a?.role ?? "",
-            model: a?.model ?? "",
-            nodeType: n.node_type,
-            isEntry: n.node_key === workflow.entry_node_key,
-          },
-        };
-      }),
-    );
-    setEdges(
-      workflow.edges.map((e) => ({
-        id: `${e.source_node_key}->${e.target_node_key}`,
-        source: e.source_node_key,
-        target: e.target_node_key,
-        label: e.condition ?? undefined,
-        data: { condition: e.condition ?? null },
-      })),
+    const initNodes: Node<AgentNodeData>[] = workflow.nodes.map((n) => {
+      const a = agentsById.get(n.agent_id);
+      return {
+        id: n.node_key,
+        type: "agent",
+        position: { x: n.position_x, y: n.position_y },
+        data: {
+          agentId: n.agent_id,
+          name: a?.name ?? `#${n.agent_id}`,
+          role: a?.role ?? "",
+          model: a?.model ?? "",
+          nodeType: n.node_type,
+          isEntry: n.node_key === workflow.entry_node_key,
+        },
+      };
+    });
+    const initEdges: Edge[] = workflow.edges.map((e) => ({
+      id: `${e.source_node_key}->${e.target_node_key}`,
+      source: e.source_node_key,
+      target: e.target_node_key,
+      label: e.condition ?? undefined,
+      data: { condition: e.condition ?? null },
+    }));
+    setNodes(initNodes);
+    setEdges(initEdges);
+    // Baseline for dirty-tracking (setting a ref in an effect is fine).
+    savedRef.current = JSON.stringify(
+      buildWorkflowPayload(workflow.name, workflow.entry_node_key, initNodes, initEdges),
     );
   }, [agents, agentsById, workflow, setNodes, setEdges]);
 
@@ -147,24 +151,33 @@ export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
       ),
     );
 
+  const payload = useMemo(
+    () => buildWorkflowPayload(name, entryKey, nodes, edges),
+    [name, entryKey, nodes, edges],
+  );
+  // A graph with nodes but no entry node can't be saved or run.
+  const invalid = nodes.length > 0 && !entryKey;
+
+  const persist = async (): Promise<boolean> => {
+    try {
+      await update.mutateAsync(payload);
+      savedRef.current = JSON.stringify(payload);
+      return true;
+    } catch {
+      return false; // useUpdateWorkflow surfaces the error via toast
+    }
+  };
+
   const save = () => {
-    update.mutate({
-      name,
-      entry_node_key: entryKey,
-      nodes: nodes.map((n) => ({
-        agent_id: n.data.agentId,
-        node_key: n.id,
-        node_type: n.data.nodeType,
-        position_x: Math.round(n.position.x),
-        position_y: Math.round(n.position.y),
-        label: null,
-      })),
-      edges: edges.map((e) => ({
-        source_node_key: e.source,
-        target_node_key: e.target,
-        condition: (e.data?.condition as string | null) ?? null,
-      })),
-    });
+    void persist();
+  };
+
+  // #3: never run a stale graph. Read the saved snapshot here (event handler, not
+  // render) — if the current graph differs, save it before navigating to /runs/new.
+  const runWorkflow = async () => {
+    const dirty = savedRef.current !== null && JSON.stringify(payload) !== savedRef.current;
+    if (dirty && !(await persist())) return;
+    router.push(`/runs/new?workflow=${workflow.id}`);
   };
 
   const selectedNode = nodes.find((n) => n.id === selNode) ?? null;
@@ -182,14 +195,21 @@ export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
         <span className="text-xs text-muted-foreground">
           {nodes.length} nodes · {edges.length} edges
         </span>
+        {invalid ? (
+          <span className="flex items-center gap-1 text-xs text-pending">
+            <AlertTriangle className="size-3.5" /> Set an entry node to save or run
+          </span>
+        ) : null}
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={save} disabled={update.isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={save}
+            disabled={update.isPending || invalid}
+          >
             <Save className="size-4" /> {update.isPending ? "Saving…" : "Save"}
           </Button>
-          <Button
-            size="sm"
-            onClick={() => router.push(`/runs/new?workflow=${workflow.id}`)}
-          >
+          <Button size="sm" onClick={runWorkflow} disabled={update.isPending || invalid}>
             <Play className="size-4" /> Run
           </Button>
         </div>
@@ -295,9 +315,10 @@ export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium">Condition</label>
                 <Input
-                  defaultValue={(selectedEdge.data?.condition as string) ?? ""}
+                  key={selectedEdge.id}
+                  value={(selectedEdge.data?.condition as string) ?? ""}
                   placeholder="e.g. needs research"
-                  onBlur={(e) => setEdgeCondition(selectedEdge.id, e.target.value)}
+                  onChange={(e) => setEdgeCondition(selectedEdge.id, e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Conditioned out-edges are routed by an LLM at run time.

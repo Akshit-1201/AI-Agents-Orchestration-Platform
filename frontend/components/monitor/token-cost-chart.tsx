@@ -4,13 +4,12 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import type { WsMessageData } from "@/lib/types";
 
 export function TokenCostChart({ messages }: { messages: WsMessageData[] }) {
-  let cumulative = 0;
-  const data = messages
-    .filter((m) => m.prompt_tokens + m.completion_tokens > 0)
-    .map((m, i) => {
-      cumulative += m.prompt_tokens + m.completion_tokens;
-      return { step: i + 1, tokens: cumulative };
-    });
+  const points = messages.filter((m) => m.prompt_tokens + m.completion_tokens > 0);
+  const data = points.reduce<{ step: number; tokens: number }[]>((acc, m, i) => {
+    const prev = i === 0 ? 0 : acc[i - 1].tokens;
+    acc.push({ step: i + 1, tokens: prev + m.prompt_tokens + m.completion_tokens });
+    return acc;
+  }, []);
 
   if (data.length < 1) {
     return <p className="text-xs text-muted-foreground">No token usage yet.</p>;

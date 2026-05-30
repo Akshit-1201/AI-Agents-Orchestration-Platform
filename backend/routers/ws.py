@@ -38,6 +38,8 @@ def _message_env(m: Message) -> dict:
             "data": {"id": m.id, "role": _enum(m.role), "content": m.content,
                      "agent_id": m.agent_id, "source_node_key": m.source_node_key,
                      "target_node_key": m.target_node_key, "tool_call_id": m.tool_call_id,
+                     "channel": m.channel, "direction": _enum(m.direction),
+                     "status": _enum(m.status), "external_id": m.external_id,
                      "prompt_tokens": m.prompt_tokens, "completion_tokens": m.completion_tokens,
                      "cost_usd": m.cost_usd,
                      "created_at": m.created_at.isoformat() if m.created_at else None}}

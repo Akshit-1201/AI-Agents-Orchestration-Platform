@@ -15,13 +15,16 @@ pydantic-settings>=2.4
 langgraph>=0.2                   # graph orchestration runtime
 langgraph-checkpoint-sqlite>=2.0 # AsyncSqliteSaver checkpointer
 langchain-core>=0.3
-langchain-google-genai>=2.0      # Gemini 2.5 Flash chat + embeddings (primary)
+langchain-openai>=0.2            # OpenAI GPT chat + embeddings (cloud; routed by gpt-* names)
 langchain-ollama>=0.2            # Ollama/Qwen chat + embeddings (local fallback)
 langchain-text-splitters>=0.3    # RecursiveCharacterTextSplitter for ingestion
 langchain-chroma>=0.1            # vector store wrapper (pulls chromadb)
 chromadb>=0.5                    # local embedded vector DB (RAG)
 ddgs>=6.0                        # keyless web search (DuckDuckGo)
 pypdf>=4.0                       # PDF loading for RAG ingestion
+
+# --- External channels (Phase 5) ---
+python-telegram-bot>=21          # Telegram bot (polling, in the FastAPI process)
 
 # --- dev / test ---
 pytest>=8.0

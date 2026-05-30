@@ -125,3 +125,46 @@ async def test_delete_agent_nulls_message_attribution(client, session):
     session.expire_all()
     got = await session.get(Message, mid)
     assert got is not None and got.agent_id is None
+
+
+async def test_sequential_handoff_passes_previous_output(client, monkeypatch):
+    """A downstream agent refines the previous agent's output (given as input), instead of
+    seeing it as its own prior assistant turn and continuing the chat."""
+    from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+    import runtime.nodes as nodes_mod
+
+    captured: dict = {}
+
+    async def scripted(messages, tools, model_name=None):
+        system = messages[0].content.lower() if messages else ""
+        if "researcher" in system:
+            captured["researcher"] = list(messages)  # copy: the node mutates `work` after this
+            return AIMessage(content="FINAL_FROM_RESEARCHER"), {"input": 0, "output": 0}, "fake"
+        captured["engineer"] = list(messages)
+        return AIMessage(content="DRAFT_FROM_ENGINEER"), {"input": 0, "output": 0}, "fake"
+
+    monkeypatch.setattr(nodes_mod, "ainvoke_chat", scripted)
+
+    eng = await _agent(client, "Eng", "engineer")
+    res = await _agent(client, "Res", "researcher")
+    wid = await _workflow(
+        client,
+        nodes=[{"agent_id": eng, "node_key": "n1"}, {"agent_id": res, "node_key": "n2"}],
+        edges=[{"source_node_key": "n1", "target_node_key": "n2"}],
+        entry="n1",
+    )
+    r = await client.post("/runs?wait=true", json={"workflow_id": wid, "input": "TASK_TEXT"})
+    assert r.status_code == 201, r.text
+
+    # The entry agent saw the raw task; the researcher got a clean handoff prompt.
+    res_msgs = captured["researcher"]
+    assert isinstance(res_msgs[0], SystemMessage)
+    assert isinstance(res_msgs[1], HumanMessage)
+    assert len(res_msgs) == 2  # no shared transcript, no trailing assistant turn
+    assert not isinstance(res_msgs[-1], AIMessage)
+    handoff = res_msgs[1].content
+    assert "DRAFT_FROM_ENGINEER" in handoff  # previous agent's output is the input
+    assert "TASK_TEXT" in handoff             # original task carried for context
+
+    # The run's final output is the LAST agent's refined result.
+    assert r.json()["output"] == "FINAL_FROM_RESEARCHER"

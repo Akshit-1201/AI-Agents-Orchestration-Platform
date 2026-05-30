@@ -160,3 +160,25 @@ class RunEventRead(RunEventBase):
 class RunReadDetail(RunRead):
     messages: List[MessageRead] = Field(default_factory=list)
     events: List[RunEventRead] = Field(default_factory=list)
+
+
+# --------------------------- Chat sessions (web) --------------------------- #
+class ChatCreate(SQLModel):
+    workflow_id: int
+    title: Optional[str] = None
+
+
+class ChatRead(SQLModel):
+    id: int
+    workflow_id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChatReadDetail(ChatRead):
+    runs: List[RunRead] = Field(default_factory=list)
+
+
+class ChatMessageCreate(SQLModel):
+    input: str

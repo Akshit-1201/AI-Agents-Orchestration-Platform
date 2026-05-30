@@ -1,17 +1,21 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/common/status-badge";
 import { AnimatedNumber } from "@/components/common/animated-number";
 import { MessageTimeline } from "@/components/monitor/message-timeline";
 import { EventLog } from "@/components/monitor/event-log";
 import { TokenCostChart } from "@/components/monitor/token-cost-chart";
-import { useRun, useWorkflows } from "@/lib/queries";
+import { qk, useRun, useWorkflows } from "@/lib/queries";
 import { useRunStream } from "@/lib/ws";
 import { fmtCost, fmtDateTime } from "@/lib/format";
 import type { RunStatus, WsEventData, WsMessageData } from "@/lib/types";
+
+const TERMINAL = new Set<RunStatus>(["completed", "failed", "cancelled"]);
 
 function Card({ title, action, children }: { title?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -44,6 +48,15 @@ export default function RunMonitorPage() {
   const { data: run } = useRun(id);
   const stream = useRunStream(Number.isFinite(id) ? id : null);
   const { data: workflows } = useWorkflows();
+  const qc = useQueryClient();
+
+  // The WS status envelope carries no output/error, so once the run reaches a
+  // terminal state refetch it to pull the authoritative output/error/finished_at.
+  useEffect(() => {
+    if (stream.status && TERMINAL.has(stream.status)) {
+      qc.invalidateQueries({ queryKey: qk.run(id) });
+    }
+  }, [stream.status, id, qc]);
 
   const status: RunStatus = stream.status ?? run?.status ?? "pending";
   const tokens = stream.totalTokens || run?.total_tokens || 0;
@@ -61,6 +74,10 @@ export default function RunMonitorPage() {
         source_node_key: m.source_node_key,
         target_node_key: m.target_node_key,
         tool_call_id: m.tool_call_id,
+        channel: m.channel,
+        direction: m.direction,
+        status: m.status,
+        external_id: m.external_id,
         prompt_tokens: m.prompt_tokens,
         completion_tokens: m.completion_tokens,
         cost_usd: m.cost_usd,
@@ -100,6 +117,13 @@ export default function RunMonitorPage() {
         </div>
         <StatusBadge status={status} />
       </div>
+
+      {stream.error ? (
+        <div className="flex items-center gap-2 rounded-lg border border-failed/40 bg-failed/10 px-3 py-2 text-sm text-failed">
+          <AlertTriangle className="size-4 shrink-0" />
+          <span>{stream.error}</span>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Total tokens" value={<AnimatedNumber value={tokens} />} />

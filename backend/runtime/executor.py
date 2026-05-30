@@ -16,12 +16,14 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from config import price_for
+from config import price_for_provider
 from database import async_session_maker
 from models import (
     Agent,
     Message,
+    MessageDirection,
     MessageRole,
+    MessageStatus,
     Run,
     RunEvent,
     RunEventType,
@@ -30,6 +32,7 @@ from models import (
 )
 from runtime.compiler import compile_workflow
 from runtime.eventbus import bus
+from runtime.providers import to_text
 
 logger = logging.getLogger("yuno.runtime.executor")
 
@@ -72,6 +75,10 @@ class Recorder:
         source_node_key: Optional[str] = None,
         target_node_key: Optional[str] = None,
         tool_call_id: Optional[str] = None,
+        channel: Optional[str] = None,
+        direction: MessageDirection = MessageDirection.internal,
+        status: MessageStatus = MessageStatus.pending,
+        external_id: Optional[str] = None,
         prompt_tokens: int = 0,
         completion_tokens: int = 0,
         cost_usd: float = 0.0,
@@ -80,7 +87,8 @@ class Recorder:
             m = Message(
                 run_id=self.run_id, role=role, content=content, agent_id=agent_id,
                 source_node_key=source_node_key, target_node_key=target_node_key,
-                tool_call_id=tool_call_id, prompt_tokens=prompt_tokens,
+                tool_call_id=tool_call_id, channel=channel, direction=direction,
+                status=status, external_id=external_id, prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens, cost_usd=cost_usd,
             )
             s.add(m)
@@ -91,13 +99,15 @@ class Recorder:
             "data": {"id": mid, "role": _enum_value(role), "content": content,
                      "agent_id": agent_id, "source_node_key": source_node_key,
                      "target_node_key": target_node_key, "tool_call_id": tool_call_id,
+                     "channel": channel, "direction": _enum_value(direction),
+                     "status": _enum_value(status), "external_id": external_id,
                      "prompt_tokens": prompt_tokens, "completion_tokens": completion_tokens,
                      "cost_usd": cost_usd,
                      "created_at": created.isoformat() if created else None},
         })
 
-    async def usage(self, model: str, usage: dict) -> None:
-        price_in, price_out = price_for(model)
+    async def usage(self, provider: str, model: str, usage: dict) -> None:
+        price_in, price_out = price_for_provider(provider, model)
         self.prompt_tokens += usage.get("input", 0)
         self.completion_tokens += usage.get("output", 0)
         self.cost_usd += (usage.get("input", 0) / 1000.0) * price_in
@@ -165,13 +175,31 @@ async def _finalize(
 
 def _last_text(messages) -> str:
     for m in reversed(messages):
-        if isinstance(m, AIMessage) and (m.content or "").strip():
-            return m.content
+        if isinstance(m, AIMessage):
+            text = to_text(m.content).strip()
+            if text:
+                return text
     return ""
 
 
-async def execute_run(run_id: int, user_input: str) -> None:
-    """Compile + execute the run's workflow, persisting + streaming results."""
+async def execute_run(
+    run_id: int,
+    user_input: str,
+    *,
+    channel: Optional[str] = None,
+    external_id: Optional[str] = None,
+    history: Optional[list] = None,
+) -> None:
+    """Compile + execute the run's workflow, persisting + streaming results.
+
+    When `channel` is set (an external-channel run, e.g. Telegram), the opening user
+    message is attributed as inbound (direction/channel/external_id) for reliability.
+
+    `history` is an optional list of prior turns ({"role": "user"|"assistant",
+    "content": str}) seeded into the graph before the new input, giving channel chats a
+    lightweight multi-turn memory. Only the new `user_input` is persisted as a message;
+    history is context, not re-recorded.
+    """
     rec = Recorder(run_id)
     try:
         async with async_session_maker() as s:
@@ -180,10 +208,25 @@ async def execute_run(run_id: int, user_input: str) -> None:
         await _set_status(run_id, RunStatus.running)
         _publish_status(run_id, RunStatus.running, rec)
         await rec.event("step_start", {"run": run_id})
-        await rec.message(MessageRole.user, user_input, target_node_key=workflow.entry_node_key)
+        if channel:
+            await rec.message(
+                MessageRole.user, user_input, target_node_key=workflow.entry_node_key,
+                channel=channel, direction=MessageDirection.inbound,
+                status=MessageStatus.delivered, external_id=external_id,
+            )
+        else:
+            await rec.message(MessageRole.user, user_input, target_node_key=workflow.entry_node_key)
 
         app = compile_workflow(workflow, agents_by_id, rec, checkpointer=None)
-        init = {"messages": [HumanMessage(content=user_input)], "run_id": run_id, "input": user_input}
+        seed = []
+        for turn in history or []:
+            content = turn.get("content") or ""
+            if turn.get("role") == "assistant":
+                seed.append(AIMessage(content=content))
+            else:
+                seed.append(HumanMessage(content=content))
+        seed.append(HumanMessage(content=user_input))
+        init = {"messages": seed, "run_id": run_id, "input": user_input}
         final_state = await app.ainvoke(init, config={"recursion_limit": GRAPH_RECURSION_LIMIT})
 
         output = _last_text(final_state.get("messages", []))
@@ -199,9 +242,9 @@ async def execute_run(run_id: int, user_input: str) -> None:
                         finished_at=datetime.now(timezone.utc).isoformat())
 
 
-def schedule_run(run_id: int, user_input: str) -> asyncio.Task:
-    """Run `execute_run` as a background task (non-blocking POST /runs)."""
-    task = asyncio.create_task(execute_run(run_id, user_input))
+def schedule_run(run_id: int, user_input: str, *, history: Optional[list] = None) -> asyncio.Task:
+    """Run `execute_run` as a background task (non-blocking POST /runs and chat turns)."""
+    task = asyncio.create_task(execute_run(run_id, user_input, history=history))
     _RUNNING_TASKS.add(task)
     task.add_done_callback(_RUNNING_TASKS.discard)
     return task

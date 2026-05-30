@@ -1,18 +1,18 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Field, NativeSelect, SectionCard, TagInput, Toggle } from "@/components/common/form";
+import { Field, KeyValueEditor, ModelSelect, NativeSelect, SectionCard, TagInput, Toggle } from "@/components/common/form";
 import { TOOL_NAMES, type AgentCreate } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const DEFAULTS: AgentCreate = {
   name: "",
   role: "",
-  model: "gemini-2.5-flash",
+  model: "gpt-4.1-mini",
   system_prompt: "",
   description: "",
   tools: [],
@@ -39,12 +39,12 @@ export function AgentForm({
   onSubmit: (values: AgentCreate) => void;
 }) {
   const form = useForm<AgentCreate>({ defaultValues: initial ?? DEFAULTS });
-  const { register, handleSubmit, watch, setValue, control, formState } = form;
+  const { register, handleSubmit, setValue, control, formState } = form;
   const errors = formState.errors;
 
   const channels = useFieldArray({ control, name: "channels" });
   const schedules = useFieldArray({ control, name: "schedules" });
-  const tools = watch("tools");
+  const tools = useWatch({ control, name: "tools" }) ?? [];
 
   const toggleTool = (t: string) =>
     setValue(
@@ -66,8 +66,12 @@ export function AgentForm({
           <Field label="Role" error={errors.role && "Required"}>
             <Input placeholder="researcher" {...register("role", { required: true })} />
           </Field>
-          <Field label="Model" error={errors.model && "Required"}>
-            <Input placeholder="gemini-2.5-flash" {...register("model", { required: true })} />
+          <Field
+            label="Model"
+            error={errors.model && "Required"}
+            hint="gpt-*/o* models run via OpenAI (cloud, tool-capable); any other name runs on local Ollama (must be pulled). For tools, prefer an OpenAI model (e.g. gpt-4.1-mini) or a tool-capable local model (qwen2.5, llama3.1) — tiny/reasoning models (qwen2.5:0.5b, deepseek-r1) can't reliably call tools."
+          >
+            <ModelSelect placeholder="gpt-4.1-mini" {...register("model", { required: true })} />
           </Field>
           <Field label="Description" hint="Optional, shown in lists.">
             <Input placeholder="Finds and summarizes information" {...register("description")} />
@@ -106,10 +110,16 @@ export function AgentForm({
           </div>
         </Field>
         <Field className="mt-4" label="Skills" hint="Comma-separated.">
-          <TagInput
-            value={watch("skills")}
-            onChange={(v) => setValue("skills", v, { shouldDirty: true })}
-            placeholder="summarize, plan, critique"
+          <Controller
+            control={control}
+            name="skills"
+            render={({ field }) => (
+              <TagInput
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="summarize, plan, critique"
+              />
+            )}
           />
         </Field>
       </SectionCard>
@@ -117,10 +127,12 @@ export function AgentForm({
       <div className="grid gap-5 lg:grid-cols-2">
         <SectionCard title="Memory" description="Conversation memory for this agent.">
           <div className="space-y-3">
-            <Toggle
-              checked={watch("memory.enabled")}
-              onChange={(v) => setValue("memory.enabled", v)}
-              label="Enable memory"
+            <Controller
+              control={control}
+              name="memory.enabled"
+              render={({ field }) => (
+                <Toggle checked={field.value} onChange={field.onChange} label="Enable memory" />
+              )}
             />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Type">
@@ -134,10 +146,12 @@ export function AgentForm({
                 <Input type="number" placeholder="10" {...register("memory.window", numOrNull)} />
               </Field>
             </div>
-            <Toggle
-              checked={watch("memory.persist")}
-              onChange={(v) => setValue("memory.persist", v)}
-              label="Persist across runs"
+            <Controller
+              control={control}
+              name="memory.persist"
+              render={({ field }) => (
+                <Toggle checked={field.value} onChange={field.onChange} label="Persist across runs" />
+              )}
             />
           </div>
         </SectionCard>
@@ -161,17 +175,25 @@ export function AgentForm({
 
         <SectionCard title="Guardrails" description="Light safety constraints.">
           <Field label="Blocked topics" hint="Comma-separated.">
-            <TagInput
-              value={watch("guardrails.blocked_topics")}
-              onChange={(v) => setValue("guardrails.blocked_topics", v)}
-              placeholder="nsfw, legal advice"
+            <Controller
+              control={control}
+              name="guardrails.blocked_topics"
+              render={({ field }) => (
+                <TagInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="nsfw, legal advice"
+                />
+              )}
             />
           </Field>
           <div className="mt-3 space-y-3">
-            <Toggle
-              checked={watch("guardrails.allowed_tools_only")}
-              onChange={(v) => setValue("guardrails.allowed_tools_only", v)}
-              label="Only configured tools"
+            <Controller
+              control={control}
+              name="guardrails.allowed_tools_only"
+              render={({ field }) => (
+                <Toggle checked={field.value} onChange={field.onChange} label="Only configured tools" />
+              )}
             />
             <Field label="Max output chars">
               <Input type="number" placeholder="—" {...register("guardrails.max_output_chars", numOrNull)} />
@@ -181,16 +203,20 @@ export function AgentForm({
 
         <SectionCard title="Interaction rules" description="How this agent collaborates (used by supervisors).">
           <div className="space-y-3">
-            <Toggle
-              checked={watch("interaction_rules.can_delegate")}
-              onChange={(v) => setValue("interaction_rules.can_delegate", v)}
-              label="Can delegate to others"
+            <Controller
+              control={control}
+              name="interaction_rules.can_delegate"
+              render={({ field }) => (
+                <Toggle checked={field.value} onChange={field.onChange} label="Can delegate to others" />
+              )}
             />
             <Field label="Allowed targets" hint="node_keys it may route to; comma-separated.">
-              <TagInput
-                value={watch("interaction_rules.allowed_targets")}
-                onChange={(v) => setValue("interaction_rules.allowed_targets", v)}
-                placeholder="n2, n3"
+              <Controller
+                control={control}
+                name="interaction_rules.allowed_targets"
+                render={({ field }) => (
+                  <TagInput value={field.value} onChange={field.onChange} placeholder="n2, n3" />
+                )}
               />
             </Field>
             <Field label="Response style">
@@ -200,23 +226,42 @@ export function AgentForm({
         </SectionCard>
       </div>
 
-      <SectionCard title="Channels" description="External messaging bindings (config wired in Phase 5).">
+      <SectionCard title="Channels" description="External messaging bindings and their provider config (key/value).">
         <div className="space-y-3">
           {channels.fields.map((f, i) => (
-            <div key={f.id} className="flex items-center gap-3">
-              <NativeSelect className="max-w-40" {...register(`channels.${i}.provider`)}>
-                <option value="telegram">telegram</option>
-                <option value="slack">slack</option>
-                <option value="whatsapp">whatsapp</option>
-              </NativeSelect>
-              <Toggle
-                checked={watch(`channels.${i}.enabled`)}
-                onChange={(v) => setValue(`channels.${i}.enabled`, v)}
-                label="Enabled"
-              />
-              <Button type="button" variant="ghost" size="icon" onClick={() => channels.remove(i)}>
-                <Trash2 className="size-4" />
-              </Button>
+            <div key={f.id} className="space-y-3 rounded-lg border border-border p-3">
+              <div className="flex items-center gap-3">
+                <NativeSelect className="max-w-40" {...register(`channels.${i}.provider`)}>
+                  <option value="telegram">telegram</option>
+                  <option value="slack">slack</option>
+                  <option value="whatsapp">whatsapp</option>
+                </NativeSelect>
+                <Controller
+                  control={control}
+                  name={`channels.${i}.enabled`}
+                  render={({ field }) => (
+                    <Toggle checked={field.value} onChange={field.onChange} label="Enabled" />
+                  )}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto"
+                  onClick={() => channels.remove(i)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+              <Field label="Config" hint="Provider settings as key/value (e.g. chat_id, webhook_url).">
+                <Controller
+                  control={control}
+                  name={`channels.${i}.config`}
+                  render={({ field }) => (
+                    <KeyValueEditor value={field.value ?? {}} onChange={field.onChange} />
+                  )}
+                />
+              </Field>
             </div>
           ))}
           <Button
@@ -244,10 +289,12 @@ export function AgentForm({
                 placeholder="0 9 * * *"
                 {...register(`schedules.${i}.expr`)}
               />
-              <Toggle
-                checked={watch(`schedules.${i}.enabled`)}
-                onChange={(v) => setValue(`schedules.${i}.enabled`, v)}
-                label="On"
+              <Controller
+                control={control}
+                name={`schedules.${i}.enabled`}
+                render={({ field }) => (
+                  <Toggle checked={field.value} onChange={field.onChange} label="On" />
+                )}
               />
               <Button type="button" variant="ghost" size="icon" onClick={() => schedules.remove(i)}>
                 <Trash2 className="size-4" />

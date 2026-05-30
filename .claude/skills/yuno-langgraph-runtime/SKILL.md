@@ -1,6 +1,6 @@
 ---
 name: yuno-langgraph-runtime
-description: "Patterns for the Yuno AI runtime (Phase 2): compiling a DB workflow definition into a LangGraph StateGraph at run time, supervisor/worker routing, the Gemini->Ollama LLM fallback, the tool registry, persisting RunEvents, and POST /runs. Use when building or modifying anything under backend/runtime (compiler.py, supervisor.py, tools.py, llm.py), implementing run execution, LangGraph graphs, agent orchestration, checkpoints, or streaming run events. FORWARD-LOOKING: encodes the intended design from plan.md/CLAUDE.md; refine against real code once Phase 2 starts."
+description: "Patterns for the Yuno AI runtime (Phase 2): compiling a DB workflow definition into a LangGraph StateGraph at run time, supervisor/worker routing, the OpenAI->Ollama LLM fallback, the tool registry, persisting RunEvents, and POST /runs. Use when building or modifying anything under backend/runtime (compiler.py, supervisor.py, tools.py, llm.py), implementing run execution, LangGraph graphs, agent orchestration, checkpoints, or streaming run events. FORWARD-LOOKING: encodes the intended design from plan.md/CLAUDE.md; refine against real code once Phase 2 starts."
 ---
 
 # Yuno AI Runtime — LangGraph Patterns (Phase 2)
@@ -41,9 +41,9 @@ LangGraph APIs at build time (LangGraph churns).
   registry dict; agents opt in by name. Custom UI-defined tools are out of scope.
 
 ## LLM client + fallback (`llm.py`)
-- **Try Gemini 2.5 Flash first; on API error / rate-limit, fall back to local
-  Ollama/Qwen.** Structured retry with logging on each provider switch.
-- Read keys from `config.Settings` (`gemini_api_key` already declared).
+- **Run the agent's model on OpenAI (gpt-*/o* names); on API error / rate-limit, fall back
+  to the local Ollama/Qwen model.** Structured retry with logging on each provider switch.
+- Read keys from `config.Settings` (`openai_api_key` already declared).
 
 ## Persistence & events
 - Transition `Run.status`: `pending -> running -> completed | failed | cancelled`;

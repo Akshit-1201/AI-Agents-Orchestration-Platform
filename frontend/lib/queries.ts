@@ -6,6 +6,7 @@ import { api, ApiError } from "./api";
 import type {
   AgentCreate,
   AgentUpdate,
+  ChatCreate,
   RunCreate,
   WorkflowCreate,
   WorkflowUpdate,
@@ -18,6 +19,8 @@ export const qk = {
   workflow: (id: number) => ["workflows", id] as const,
   runs: ["runs"] as const,
   run: (id: number) => ["runs", id] as const,
+  chats: ["chats"] as const,
+  chat: (id: number) => ["chats", id] as const,
 };
 
 const errMsg = (e: unknown) =>
@@ -137,6 +140,62 @@ export function useCreateRun() {
       api.createRun(body, wait),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.runs });
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+export function useDeleteRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteRun(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.runs });
+      toast.success("Run deleted");
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+// --------------------------- Chats ---------------------------
+export const useChats = () =>
+  useQuery({ queryKey: qk.chats, queryFn: api.listChats });
+
+export const useChat = (id: number) =>
+  useQuery({
+    queryKey: qk.chat(id),
+    queryFn: () => api.getChat(id),
+    enabled: Number.isFinite(id) && id > 0,
+  });
+
+export function useCreateChat() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ChatCreate) => api.createChat(body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.chats }),
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+export function useDeleteChat() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteChat(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.chats });
+      toast.success("Chat deleted");
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+export function useSendChatMessage(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: string) => api.sendChatMessage(id, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.chat(id) });
+      qc.invalidateQueries({ queryKey: qk.chats });
     },
     onError: (e) => toast.error(errMsg(e)),
   });

@@ -43,14 +43,24 @@ export default function WorkflowsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {workflows.map((w, i) => (
-            <motion.button
+          {workflows.map((w, i) => {
+            const open = () => router.push(`/workflows/${w.id}`);
+            return (
+            <motion.div
               key={w.id}
+              role="button"
+              tabIndex={0}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: Math.min(i * 0.03, 0.2) }}
-              onClick={() => router.push(`/workflows/${w.id}`)}
-              className="group flex w-full items-center gap-4 rounded-xl border border-border bg-card/60 p-4 text-left transition-colors hover:border-border/80 hover:bg-card"
+              onClick={open}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  open();
+                }
+              }}
+              className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/60 p-4 text-left transition-colors hover:border-border/80 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
                 <WorkflowIcon className="size-5" />
@@ -76,8 +86,9 @@ export default function WorkflowsPage() {
               >
                 <Trash2 className="size-3.5" /> Delete
               </ConfirmButton>
-            </motion.button>
-          ))}
+            </motion.div>
+            );
+          })}
         </div>
       )}
     </PageShell>

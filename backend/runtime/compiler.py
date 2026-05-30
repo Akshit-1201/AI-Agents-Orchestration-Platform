@@ -28,6 +28,8 @@ def compile_workflow(workflow: Workflow, agents_by_id: Dict[int, Agent], recorde
     for e in workflow.edges:
         out_edges.setdefault(e.source_node_key, []).append(e)
 
+    entry_key = workflow.entry_node_key or nodes[0].node_key
+
     builder = StateGraph(RunState)
     for n in nodes:
         agent = agents_by_id[n.agent_id]
@@ -36,7 +38,11 @@ def compile_workflow(workflow: Workflow, agents_by_id: Dict[int, Agent], recorde
             builder.add_node(n.node_key, make_supervisor_node(agent, n.node_key, successors, recorder))
         else:
             builder.add_node(
-                n.node_key, make_agent_node(agent, n.node_key, get_tools_for(agent.tools), recorder)
+                n.node_key,
+                make_agent_node(
+                    agent, n.node_key, get_tools_for(agent.tools), recorder,
+                    is_entry=(n.node_key == entry_key),
+                ),
             )
 
     builder.add_edge(START, workflow.entry_node_key or nodes[0].node_key)

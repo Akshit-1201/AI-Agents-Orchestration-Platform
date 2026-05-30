@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Activity, Bot, LayoutDashboard, Workflow } from "lucide-react";
+import { Activity, Bot, LayoutDashboard, MessageSquare, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/workflows", label: "Workflows", icon: Workflow },
+  { href: "/chats", label: "Chats", icon: MessageSquare },
   { href: "/runs", label: "Runs", icon: Activity },
 ] as const;
 

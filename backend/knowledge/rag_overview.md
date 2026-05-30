@@ -7,7 +7,7 @@ only on the model's training data.
 1. **Ingestion**: documents in `backend/knowledge/` are split into ~1000-character
    chunks (150-character overlap), embedded, and stored in a local **Chroma** vector
    database under `VECTOR_STORE_DIR`.
-2. **Embeddings**: the query and chunks are embedded with Gemini `text-embedding-004`,
+2. **Embeddings**: the query and chunks are embedded with OpenAI `text-embedding-3-small`,
    falling back to the local Ollama `nomic-embed-text` model.
 3. **Retrieval**: the `knowledge_search` tool embeds the user's query, finds the
    top-K most similar chunks (default K=4), and returns them with their source filenames.

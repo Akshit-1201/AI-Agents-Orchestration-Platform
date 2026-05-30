@@ -1,7 +1,7 @@
 """RAG: a local Chroma vector store with ingestion + retrieval.
 
-Fully local and offline — Chroma persists to `settings.vector_store_dir`, embeddings
-go through the same Gemini->Ollama fallback as the LLMs (deterministic fake in tests).
+Chroma persists to `settings.vector_store_dir`; embeddings go through the same
+OpenAI->Ollama fallback as the LLMs (deterministic fake in tests).
 """
 import logging
 from pathlib import Path

@@ -16,8 +16,8 @@ into a LangGraph `StateGraph` at run time — the database row is the source of 
 Agents call real tools and communicate with each other to complete tasks.
 
 ## LLM routing
-The platform calls **Gemini 2.5 Flash** first and falls back to a local **Ollama/Qwen**
-model if Gemini is unavailable or rate-limited.
+The platform runs an agent's model on **OpenAI** (for `gpt-*`/`o*` model names) and falls
+back to a local **Ollama/Qwen** model if OpenAI is unavailable or rate-limited.
 
 ## Tools
 Built-in tools include web search, a calculator, HTTP fetch, and knowledge search

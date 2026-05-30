@@ -175,6 +175,22 @@ export interface RunCreate {
   input: string;
 }
 
+// --- Chats (web multi-turn conversations bound to a workflow) ---
+export interface Chat {
+  id: number;
+  workflow_id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+export interface ChatDetail extends Chat {
+  runs: Run[]; // each run is one turn (input = user, output = assistant)
+}
+export interface ChatCreate {
+  workflow_id: number;
+  title?: string | null;
+}
+
 // --- WebSocket envelopes (WS /ws/runs/{id}) — not in OpenAPI ---
 export interface WsEventData {
   id: number;
@@ -190,6 +206,10 @@ export interface WsMessageData {
   source_node_key: string | null;
   target_node_key: string | null;
   tool_call_id: string | null;
+  channel: string | null;
+  direction: MessageDirection;
+  status: MessageStatus;
+  external_id: string | null;
   prompt_tokens: number;
   completion_tokens: number;
   cost_usd: number;

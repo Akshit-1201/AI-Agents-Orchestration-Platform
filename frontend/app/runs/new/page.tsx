@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, NativeSelect } from "@/components/common/form";
 import { PageHeader, PageShell } from "@/components/common/page-shell";
 import { useCreateRun, useWorkflows } from "@/lib/queries";
+import { isRunnable } from "@/lib/workflow";
 
 function NewRunInner() {
   const router = useRouter();
@@ -17,10 +18,13 @@ function NewRunInner() {
   const [workflowId, setWorkflowId] = useState<string>(params.get("workflow") ?? "");
   const [input, setInput] = useState("");
 
+  const selected = (workflows ?? []).find((w) => String(w.id) === workflowId);
+  const runnable = selected ? isRunnable(selected) : false;
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const id = Number(workflowId);
-    if (!id || !input.trim()) return;
+    if (!id || !input.trim() || !runnable) return;
     create.mutate(
       { body: { workflow_id: id, input: input.trim() } },
       { onSuccess: (run) => router.push(`/runs/${run.id}`) },
@@ -35,11 +39,17 @@ function NewRunInner() {
           <NativeSelect value={workflowId} onChange={(e) => setWorkflowId(e.target.value)}>
             <option value="">Select a workflow…</option>
             {(workflows ?? []).map((w) => (
-              <option key={w.id} value={w.id}>
+              <option key={w.id} value={w.id} disabled={!isRunnable(w)}>
                 {w.name}
+                {isRunnable(w) ? "" : " — no entry node"}
               </option>
             ))}
           </NativeSelect>
+          {workflowId && !runnable ? (
+            <p className="mt-1.5 text-xs text-pending">
+              This workflow has no entry node — open it in the builder and set one before running.
+            </p>
+          ) : null}
         </Field>
         <Field label="Input" hint="The task for the entry agent.">
           <Textarea
@@ -54,7 +64,7 @@ function NewRunInner() {
           <Button type="button" variant="ghost" onClick={() => router.push("/runs")}>
             Cancel
           </Button>
-          <Button type="submit" disabled={create.isPending || !workflowId || !input.trim()}>
+          <Button type="submit" disabled={create.isPending || !workflowId || !input.trim() || !runnable}>
             {create.isPending ? "Starting…" : "Start run"}
           </Button>
         </div>

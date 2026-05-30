@@ -3,7 +3,7 @@ def _agent_payload(**overrides):
         "name": "Researcher",
         "role": "researcher",
         "system_prompt": "You research things.",
-        "model": "gemini-2.5-flash",
+        "model": "gpt-4.1-mini",
         "tools": ["web_search"],
         "skills": ["summarize"],
     }

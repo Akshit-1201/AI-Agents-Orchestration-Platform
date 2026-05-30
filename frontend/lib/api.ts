@@ -2,6 +2,9 @@ import type {
   Agent,
   AgentCreate,
   AgentUpdate,
+  Chat,
+  ChatCreate,
+  ChatDetail,
   Run,
   RunCreate,
   RunDetail,
@@ -80,5 +83,20 @@ export const api = {
     request<RunDetail>(`/runs${wait ? "?wait=true" : ""}`, {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+  deleteRun: (id: number) =>
+    request<void>(`/runs/${id}`, { method: "DELETE" }),
+
+  // chats
+  listChats: () => request<Chat[]>("/chats"),
+  getChat: (id: number) => request<ChatDetail>(`/chats/${id}`),
+  createChat: (body: ChatCreate) =>
+    request<ChatDetail>("/chats", { method: "POST", body: JSON.stringify(body) }),
+  deleteChat: (id: number) =>
+    request<void>(`/chats/${id}`, { method: "DELETE" }),
+  sendChatMessage: (id: number, input: string) =>
+    request<RunDetail>(`/chats/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ input }),
     }),
 };

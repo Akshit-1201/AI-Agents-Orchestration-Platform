@@ -8,7 +8,8 @@ from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import agents, runs, workflows, ws
+from channels.manager import start_channels, stop_channels
+from routers import agents, chats, runs, workflows, ws
 
 # Absolute path so migrations work regardless of the launch directory.
 _ALEMBIC_INI = str(Path(__file__).resolve().parent / "alembic.ini")
@@ -23,7 +24,12 @@ def _run_migrations() -> None:
 async def lifespan(app: FastAPI):
     # Migrations are the schema source of truth (single-command local run).
     await asyncio.to_thread(_run_migrations)
-    yield
+    # Start external channel bots (Telegram if TELEGRAM_TOKEN is set); failure-tolerant.
+    await start_channels()
+    try:
+        yield
+    finally:
+        await stop_channels()
 
 
 app = FastAPI(title="Yuno Orchestration API", version="0.1.0", lifespan=lifespan)
@@ -40,6 +46,7 @@ app.add_middleware(
 app.include_router(agents.router)
 app.include_router(workflows.router)
 app.include_router(runs.router)
+app.include_router(chats.router)
 app.include_router(ws.router)  # WS /ws/runs/{run_id} live stream
 
 
