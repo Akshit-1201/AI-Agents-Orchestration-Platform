@@ -71,15 +71,34 @@ bot shares the same backend process and the same run pipeline — it is not a se
 | **Channels** | `backend/channels/` | Pluggable external transports (Telegram); routing isolated from transport. |
 
 ### Why LangGraph (runtime justification)
-The platform needs **graph-native multi-agent orchestration**: supervisor/worker routing,
-**conditional edges**, and **cycles (feedback loops)** — plus streaming for live monitoring.
-LangGraph models exactly this as a `StateGraph` with conditional edges and a recursion limit, and its
-streaming maps cleanly onto our WebSocket feed. Alternatives were heavier or less graph-native for our
-needs: **CrewAI** is role/task-oriented (less explicit graph control over conditional cycles),
-**AutoGen** centers on conversational agent groups (more wiring for a DB-defined visual graph). We use
-a **custom agent node loop** (not `create_react_agent`) so we control the OpenAI→Ollama fallback,
-per-message token/cost instrumentation, and `limits`/`guardrails` enforcement. The LangGraph
-checkpointer is deferred (runs are short and fully persisted to SQLite).
+
+The deciding factor is that **our workflow _is_ a graph**. The visual builder stores each workflow as
+nodes (agents) and edges (with conditions) in the database, and that row is the source of truth. So
+the runtime's only job is to take a node/edge graph and execute it — with **conditional routing**,
+**feedback loops (cycles)**, and **live streaming** for the monitor. LangGraph's core abstraction is
+exactly that: a `StateGraph` of node functions wired by edges, including conditional edges and
+recursion-capped cycles. Compiling a DB workflow into a runnable graph is therefore a near 1:1
+mapping (`backend/runtime/compiler.py`), and LangGraph's step/state streaming feeds our WebSocket
+monitor directly.
+
+The other options each optimize for a different shape and **hide the explicit graph** our builder
+and conditional/cyclic routing depend on: **CrewAI** organizes work as roles + tasks, **AutoGen** as
+multi-agent conversations, and **openclaw.ai** as always-on persona agents with memory files — all
+strong for those use cases, but each gives less low-level, per-step control than we need. A **custom
+runtime** would give total control but means re-building graph compilation, cycle handling, and
+streaming that LangGraph already provides. We take the middle path: LangGraph owns the _graph
+mechanics_, while we keep a **custom agent node loop** (not `create_react_agent`) for the parts we do
+need to control — the OpenAI→Ollama fallback, per-message token/cost, and `limits`/`guardrails`
+enforcement. (The LangGraph checkpointer is deferred — runs are short and already fully persisted to
+SQLite.)
+
+| Framework | Built around | Conditional edges + cycles | Per-step control & instrumentation | Live streaming | Maps to our DB graph + visual builder |
+|---|---|---|---|---|---|
+| **LangGraph** ✅ | An explicit `StateGraph` (nodes · edges · shared state) | **First-class** — conditional edges + recursion-capped loops | **Full** — nodes are plain functions we own | **Built-in** step/state streaming | **Direct 1:1** — compile DB rows → graph |
+| openclaw.ai | Always-on persona agents (SOUL.md / MEMORY) | Not a graph engine | Limited — opinionated runtime | Persona/event-driven, not run-graph | Poor — built for long-lived agents, not DB-defined workflows |
+| CrewAI | Roles + tasks (a "crew" running a process) | Limited — sequential/hierarchical; cycles are awkward | Coarse — the agent loop is hidden behind roles | Callbacks, less granular | Weak — abstracts the graph away behind roles |
+| AutoGen | Multi-agent conversations / group chat | Emergent via chat, not explicit edges | Medium — conversation-centric | Message/turn events | Weak — turn-based, not a stored node/edge graph |
+| Custom runtime | Whatever we build | We'd build it ourselves | Total | We'd build it ourselves | We'd build it — effectively re-implementing LangGraph |
 
 ---
 
