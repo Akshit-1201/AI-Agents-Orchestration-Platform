@@ -1,0 +1,72 @@
+# Yuno AI Agents Orchestration Platform — full stack in one command:
+#
+#     docker compose up --build
+#
+# Then open the app at http://localhost:3000 (API + Swagger at http://localhost:8000/docs).
+#
+# Secrets/config (OPENAI_API_KEY, TELEGRAM_TOKEN, …) are read from ./backend/.env if it
+# exists (copy backend/.env.example -> backend/.env first). With no key set the app still
+# runs; set USE_FAKE_LLM=true in backend/.env for a fully offline deterministic runtime.
+
+services:
+  backend:
+    build: ./backend
+    image: yuno-backend
+    container_name: yuno-backend
+    ports:
+      - "8000:8000"
+    # Load your real config/secrets if present; the app has working defaults without it.
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Persist the SQLite DB and Chroma vector store in the named volume (/data).
+      DATABASE_URL: sqlite+aiosqlite:////data/yuno.db
+      VECTOR_STORE_DIR: /data/.chroma
+    volumes:
+      - yuno-data:/data
+    # Lets the container reach an Ollama running on the host (set in backend/.env:
+    #   OLLAMA_BASE_URL=http://host.docker.internal:11434).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode()==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 45s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Where the browser reaches the API (baked into the client bundle at build time).
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    image: yuno-frontend
+    container_name: yuno-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  yuno-data:
+
+# --- Optional: run Ollama (local LLM fallback) as a service instead of on the host ---
+# Uncomment this block AND set OLLAMA_BASE_URL=http://ollama:11434 in backend/.env, then
+# pull a model once:  docker compose exec ollama ollama pull qwen2.5 nomic-embed-text
+#
+#   ollama:
+#     image: ollama/ollama:latest
+#     container_name: yuno-ollama
+#     ports:
+#       - "11434:11434"
+#     volumes:
+#       - ollama-data:/root/.ollama
+#     restart: unless-stopped
+#
+# volumes:
+#   ollama-data:

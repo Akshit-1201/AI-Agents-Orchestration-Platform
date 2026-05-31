@@ -1,0 +1,35 @@
+# Keep the image lean and secret-free. Secrets come in at runtime via compose env_file.
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Local env / secrets (the live .env is injected at runtime, never baked in)
+.env
+.env.*
+!.env.example
+
+# Local data (regenerated; persisted in a named volume at runtime)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+.chroma/
+**/.chroma/
+
+# Test / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Docker / VCS / editor cruft (note: knowledge/*.md RAG docs are kept on purpose)
+Dockerfile
+.dockerignore
+.git/
+.gitignore

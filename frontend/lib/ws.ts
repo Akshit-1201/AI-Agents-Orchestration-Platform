@@ -104,8 +104,12 @@ export function useRunStream(runId: number | null): RunStreamState {
       };
 
       ws.onerror = () => {
-        // A close event follows; surface a soft error unless the run already ended.
-        if (!done) setState((s) => ({ ...s, error: s.error ?? "connection error" }));
+        // Intentionally a no-op. A `close` event ALWAYS follows an `error`, and `onclose`
+        // already owns reconnect + user-facing messaging (and ignores a socket we aborted
+        // ourselves via `closedByUs`). Surfacing an error here caused a red, failure-looking
+        // banner to flash on every fresh monitor mount: React StrictMode (dev) mounts the
+        // effect, immediately aborts the first socket, and remounts — the aborted socket's
+        // `error` event would set "connection error" before the real socket finished opening.
       };
 
       ws.onclose = () => {
