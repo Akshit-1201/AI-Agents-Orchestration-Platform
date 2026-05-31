@@ -20,9 +20,9 @@ export function AgentNode({ data, selected }: NodeProps) {
   return (
     <div
       className={cn(
-        "w-52 rounded-xl border bg-card px-3 py-2.5 shadow-md transition-colors",
-        selected ? "border-brand ring-2 ring-brand/30" : "border-border",
-        supervisor && !selected && "border-brand/40",
+        "w-52 rounded-xl border bg-card px-3 py-2.5 transition-colors",
+        selected ? "border-primary ring-2 ring-primary/30" : "border-border",
+        supervisor && !selected && "border-primary/40",
       )}
     >
       <Handle
@@ -40,7 +40,7 @@ export function AgentNode({ data, selected }: NodeProps) {
           {supervisor ? <Crown className="size-4" /> : <Bot className="size-4" />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{d.name}</p>
+          <p className="truncate text-sm font-semibold">{d.name}</p>
           <p className="truncate text-[11px] text-muted-foreground">{d.role}</p>
         </div>
         {d.isEntry ? (

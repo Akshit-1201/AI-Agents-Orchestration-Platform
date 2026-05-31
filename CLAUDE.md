@@ -36,9 +36,11 @@ Four surfaces:
   inter-agent messages, token/cost) live; never polls REST for in-progress runs.
 - **Runs list** — past/active runs with status badges.
 
-**Design language (locked — `design-system/yuno/MASTER.md`):** dark-first (OLED); **slate** base +
-**green** (primary / "Run") and **indigo** accent as shadcn tokens in `globals.css`; **IBM Plex Sans**
-(UI) + **JetBrains Mono** (logs/IDs); semantic status colors mapped to `RunStatus`; framer-motion for
+**Design language (`design-system/yuno/MASTER.md`):** **"Apple" — light-first** with a light/dark
+toggle (`next-themes`); a **single Action Blue `#0066cc`** accent (Sky Blue `#2997ff` on dark) as
+shadcn tokens in `globals.css`; white/parchment canvases + near-black tiles; **pill buttons** with a
+`scale(0.96)` press and **hairline, shadowless cards**; **Inter** (UI) + **JetBrains Mono** (logs/IDs);
+weight ladder 300/400/600/700 (no 500); semantic status colors mapped to `RunStatus`; framer-motion for
 transitions, the canvas, and streaming feeds.
 
 ### Backend (`/backend`)

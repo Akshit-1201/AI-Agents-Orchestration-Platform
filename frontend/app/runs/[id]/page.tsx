@@ -19,7 +19,7 @@ const TERMINAL = new Set<RunStatus>(["completed", "failed", "cancelled"]);
 
 function Card({ title, action, children }: { title?: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card/60 p-4">
+    <section className="rounded-xl border border-border bg-card p-4">
       {title ? (
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">{title}</h3>
@@ -33,7 +33,7 @@ function Card({ title, action, children }: { title?: string; action?: React.Reac
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-card/60 p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 font-mono text-xl font-semibold">{value}</p>
     </div>

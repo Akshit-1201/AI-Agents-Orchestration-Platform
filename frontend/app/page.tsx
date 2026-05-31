@@ -42,7 +42,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: i * 0.04 }}
             onClick={() => router.push(href)}
-            className="flex items-center gap-4 rounded-xl border border-border bg-card/60 p-5 text-left transition-colors hover:border-border/80 hover:bg-card"
+            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 text-left transition-colors hover:border-border/80 hover:bg-card"
           >
             <span className="grid size-11 place-items-center rounded-lg bg-brand/15 text-brand">
               <Icon className="size-5" />
@@ -55,7 +55,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <section className="rounded-xl border border-border bg-card/60 p-5">
+      <section className="rounded-xl border border-border bg-card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold">Recent runs</h3>
           <Button variant="ghost" size="sm" onClick={() => router.push("/runs")}>

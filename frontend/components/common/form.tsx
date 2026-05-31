@@ -19,7 +19,7 @@ export function Field({
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      {label ? <label className="text-sm font-medium">{label}</label> : null}
+      {label ? <label className="text-sm font-semibold">{label}</label> : null}
       {children}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
       {error ? <p className="text-xs text-failed">{error}</p> : null}
@@ -35,7 +35,7 @@ export const NativeSelect = React.forwardRef<
     <select
       ref={ref}
       className={cn(
-        "h-9 w-full cursor-pointer rounded-md border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50",
+        "h-9 w-full cursor-pointer rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50",
         className,
       )}
       {...props}
@@ -75,7 +75,7 @@ export const ModelSelect = React.forwardRef<
         list={listId}
         autoComplete="off"
         className={cn(
-          "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40",
+          "h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40",
           className,
         )}
         {...props}
@@ -133,7 +133,7 @@ export function TagInput({
             .filter(Boolean),
         )
       }
-      className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+      className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
     />
   );
 }
@@ -171,7 +171,7 @@ export function KeyValueEditor({
   });
 
   const inputCls =
-    "h-8 rounded-md border bg-transparent px-2.5 text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40";
+    "h-8 rounded-lg border bg-transparent px-2.5 text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40";
 
   return (
     <div className="space-y-2">
@@ -228,7 +228,7 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card/60 p-5">
+    <section className="rounded-xl border border-border bg-card p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         {description ? (

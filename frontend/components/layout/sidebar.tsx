@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Activity, Bot, LayoutDashboard, MessageSquare, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -37,7 +38,7 @@ export function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                 active
                   ? "text-sidebar-foreground"
                   : "text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground",
@@ -46,7 +47,7 @@ export function Sidebar() {
               {active && (
                 <motion.span
                   layoutId="nav-active"
-                  className="absolute inset-0 rounded-md bg-sidebar-accent"
+                  className="absolute inset-0 rounded-lg bg-sidebar-accent"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               )}
@@ -57,10 +58,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border px-5 py-4">
+      <div className="flex items-center justify-between border-t border-sidebar-border px-4 py-4">
         <p className="font-mono text-[11px] text-sidebar-foreground/45">
           local · :8000
         </p>
+        <ThemeToggle />
       </div>
     </aside>
   );

@@ -12,7 +12,7 @@ export function MessageTimeline({ messages }: { messages: WsMessageData[] }) {
     <div className="space-y-2">
       <AnimatePresence initial={false}>
         {messages.map((m) => {
-          const color = ROLE_COLOR[m.role] ?? "#94a3b8";
+          const color = ROLE_COLOR[m.role] ?? "#8e8e93";
           const tokens = m.prompt_tokens + m.completion_tokens;
           return (
             <motion.div
@@ -21,7 +21,7 @@ export function MessageTimeline({ messages }: { messages: WsMessageData[] }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="rounded-lg border border-border bg-card/50 p-3"
+              className="rounded-lg border border-border bg-card p-3"
             >
               <div className="flex items-center gap-2 text-xs">
                 <span

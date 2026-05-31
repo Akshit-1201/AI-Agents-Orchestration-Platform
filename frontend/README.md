@@ -11,7 +11,8 @@ wire them into workflows on a visual canvas, run them, and watch runs stream liv
   **react-hook-form + zod** (agent config) · **Recharts** (token/cost) · **sonner** (toasts)
 - Typed against the backend via **openapi-typescript** (`npm run gen:api`)
 
-Design language (dark-first, slate + green/indigo, IBM Plex Sans + JetBrains Mono) is defined in
+Design language — **"Apple" (light-first, single Action Blue `#0066cc` accent, Inter + JetBrains Mono,
+pill buttons, hairline shadowless cards), with a light/dark toggle** — is defined in
 [`../design-system/yuno/MASTER.md`](../design-system/yuno/MASTER.md) and wired through `app/globals.css`.
 
 ## Surfaces

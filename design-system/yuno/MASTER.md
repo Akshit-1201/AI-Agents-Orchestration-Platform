@@ -1,84 +1,92 @@
 # Yuno — Design System (Master / Source of Truth)
 
-Locked via the `ui-ux-pro-max` skill for a **developer-facing AI agent orchestration
-dashboard** (an app, not a marketing site). Authoritative reference for the Phase 4
-frontend; the `yuno-frontend` skill points here. Per-page deviations go in `pages/<page>.md`.
+**Visual language: "Apple" (photography-first, light-first).** Adopted from the
+[`getdesign.md/apple`](https://getdesign.md/apple/design-md) spec
+([raw](https://github.com/VoltAgent/awesome-design-md/blob/main/design-md/apple/DESIGN.md)).
+This **supersedes** the previous dark-first slate + green/indigo system (kept in git history).
+Authoritative reference for the frontend; the `yuno-frontend` skill points here. Tokens are wired
+through `frontend/app/globals.css`. Per-page deviations go in `pages/<page>.md`.
 
-> The generator's first auto-pick suggested an *App Store landing* pattern + *Cinzel/Josefin*
-> (luxury) fonts + a "Smart Home" category — **discarded** as wrong for a dev dashboard. The
-> Dark-Mode style + slate/green palette were kept; typography + pattern corrected below.
+## Philosophy
+UI recedes so content speaks: low density, generous whitespace, **no decorative chrome** — no
+gradients, no shadows on UI (cards/buttons/text), no borders-as-decoration. Rhythm comes from
+**surface changes** (white ↔ parchment ↔ near-black), not from boxes. Exactly **one** drop-shadow
+exists in the system (`.shadow-product`) and it is reserved for "product"/hero imagery only.
 
-## Style — Dark Mode (OLED)
-Deep slate, high contrast, eye-friendly; minimal glow; subtle glass + elevation on cards;
-**bento grid** for the live monitor. WCAG AA (AAA where easy).
-**Pattern:** app dashboard / admin panel (a minimal marketing home is optional, demo-only).
+## Theme
+**Light is the default** (Apple is light-first); a `next-themes` toggle (sidebar footer) switches to
+dark. Both are full token sets in `globals.css` (`:root` = light, `.dark` = dark). WCAG AA.
 
-## Color tokens (dark-first)
-| Role | Hex | Use |
-|---|---|---|
-| App shell bg | `#020617` (slate-950) | outermost background |
-| Background | `#0F172A` (slate-900) | page surface |
-| Card / panel | `#1E293B` (slate-800) | cards/panels (glass: `/60` + backdrop-blur) |
-| Border | `#334155` (slate-700) | borders, dividers |
-| Text | `#F8FAFC` (slate-50) | primary text |
-| Muted text | `#CBD5E1` (slate-300) | body/secondary (≥4.5:1 on dark) |
-| **Primary / "Run"** | `#22C55E` (green-500) | primary actions, execute, success |
-| Accent (AI / active) | `#6366F1` (indigo-500) | links, active node, secondary accent |
+## Color tokens (single accent)
+The accent is **one color** — Action Blue — for *every* interactive element. No second brand color.
 
-**Semantic status → `RunStatus`** (badges + React Flow edges):
-`running` `#6366F1` indigo (pulse) · `completed` `#22C55E` green · `failed` `#EF4444` red ·
-`pending` `#F59E0B` amber · `cancelled` `#64748B` slate.
-**Message roles:** user `#94A3B8` · assistant `#818CF8` (indigo) · tool `#2DD4BF` (teal) · system `#64748B`.
+| Role | Light | Dark | shadcn var |
+|---|---|---|---|
+| Accent / interactive | `#0066cc` (Action Blue) | `#2997ff` (Sky Blue) | `--primary` |
+| Focus ring | `#0071e3` | `#2997ff` | `--ring` |
+| Page canvas | `#f5f5f7` (parchment) | `#000000` (true black) | `--background` |
+| Card / panel | `#ffffff` | `#1d1d1f` (near-black tile) | `--card` |
+| Ink / text | `#1d1d1f` | `#f5f5f7` | `--foreground` |
+| Muted text | `#6e6e73` | `#98989d` | `--muted-foreground` |
+| Hairline border | `#d2d2d7` | `rgb(255 255 255 / .12)` | `--border` |
+| Sidebar | `#ffffff` | `#000000` (Apple nav) | `--sidebar` |
 
-Map to shadcn CSS variables in `app/globals.css` (`.dark`); convert to the project's token
-format (HSL/oklch) at scaffold. Use `bg-primary` etc. — never raw `var()` in markup.
+Apple surface helpers (Tailwind: `bg-parchment`, `bg-tile`, `text-ink`, `text-sky`, `border-hairline`):
+`--parchment --pearl --ink --tile --tile-2 --sky --hairline`.
 
-## Typography — "Developer Mono"
-- **Sans (UI/body):** IBM Plex Sans · **Mono (code/logs/IDs/tokens):** JetBrains Mono — load via `next/font/google`.
-- Tailwind: `fontFamily: { sans: ['IBM Plex Sans', ...], mono: ['JetBrains Mono', 'monospace'] }`
-- **Mono for:** run IDs, `node_key`s, JSON payloads, token/cost numbers, event-log lines, status chips. Sans for everything else.
-- Body line-height 1.5–1.75; line length 65–75ch; min 16px body.
+**Semantic status → `RunStatus`** (Apple system colors, legible on light + dark):
+`running` `#0a84ff` · `completed` `#34c759` · `failed` `#ff3b30` · `pending` `#ff9500` ·
+`cancelled` `#8e8e93`. **Message roles:** user `#8e8e93` · assistant `#0a84ff` · tool `#34c759` ·
+system `#af52de`. Use `bg-primary` / `text-running` etc. — never raw `var()` in markup.
+
+## Typography — Inter (SF Pro substitute)
+- **Sans (UI/body):** **Inter** (variable) via `next/font/google` → `--font-sans`. The spec's
+  recommended off-Apple stand-in for SF Pro. **Mono (IDs/logs/tokens):** JetBrains Mono → `--font-mono`.
+- **Weight ladder = 300 / 400 / 600 / 700 — weight 500 is banned.** Headlines/titles/buttons/badges
+  use **600**; body **400**; rare airy **300** for large reads.
+- **Body 17px**, line-height ~1.47. **Negative letter-spacing ("Apple tight")** on everything ≥17px:
+  body `-0.01em`, headings `-0.022em`. Helpers: `.text-hero` `.text-display` `.text-lead`.
+
+## Shape (radii) & spacing
+- Radius grammar: `sm 8` · `md 11` · `lg 14` · `xl 18` (cards) · **`rounded-full` = the signature pill**
+  (primary CTA, search input, chips, badges). Don't mix grammars. Full-bleed tiles never round.
+- Space scale (base 8): `4 / 8 / 12 / 17 / 24 / 32 / 48 / 80(section)`px. Cards pad 24; ≥64px air
+  above headlines.
+
+## Elevation
+**Flat.** Allowed: 1px hairline on cards; `backdrop-filter: blur()` on sticky/frosted bars. The only
+drop-shadow (`.shadow-product` = `0 5px 30px 3px rgb(0 0 0 / .22)`) is for hero imagery, never UI.
+
+## Components (intent; prefer shadcn primitives)
+- **Buttons:** **pill** (`rounded-full`), weight 600; primary = solid Action Blue / white text.
+  Press = `transform: scale(0.96)` (system-wide micro-interaction). Focus = blue ring. Ghost-pill =
+  transparent + 1px blue border.
+- **Cards:** white (light) / near-black tile (dark), **1px hairline, NO shadow**, radius 18.
+- **Inputs/search:** soft radius (search = pill), hairline border, blue focus ring; labels required.
+- **Chat bubbles:** user = Action Blue bubble (iMessage-style); assistant = white hairline card.
+- **Status chips:** color + **icon + text** (never color alone).
+- **Canvas (React Flow):** `colorMode` follows the theme; edges/dots use `--color-*` vars.
 
 ## Charts (live monitor) — Recharts
-Token/cost over the run timeline → **Area/Line**, 20% fill opacity, series colored from the
-status palette. Streaming charts: add a pause control, keep contrast high, provide a table fallback.
-
-## Spacing / radius / shadows
-- Space scale: `4 / 8 / 16 / 24 / 32 / 48 / 64` px (`xs…3xl`). `--radius` ≈ `0.6rem` (cards/inputs).
-- Shadows (dark, low alpha): sm `0 1px 2px rgba(0,0,0,.4)` · md `0 4px 6px rgba(0,0,0,.4)` ·
-  lg `0 10px 15px rgba(0,0,0,.45)` · xl `0 20px 25px rgba(0,0,0,.5)`.
-
-## Component intent (dark-first; prefer shadcn primitives)
-- **Buttons:** primary = solid green `#22C55E`, white text; secondary = ghost/outline on slate; `cursor-pointer`, 200ms color/opacity transition (no layout-shift).
-- **Cards/panels:** `bg-slate-800` (or `/60` glass) + `border-slate-700` + soft shadow; hover lifts via shadow/opacity.
-- **Inputs:** dark surface, `border-slate-700`, focus = `ring` in accent; labels required.
-- **Modals/dialogs:** overlay `rgba(0,0,0,.6)` + backdrop-blur; dark panel, `--radius`.
-- **Status chips:** color + **icon + text** (never color alone).
+Token/cost over the timeline → Area/Line, ~40% fill, stroke = `--color-primary`; axes/tooltip pull
+`--color-*` vars so they track the theme. Provide a table/text fallback.
 
 ## Motion (framer-motion)
 150–300ms ease-out; animate **transform/opacity only**. Spring on canvas node drag; **staggered
-fade-up** for new feed entries (+ `layout`); animated number counters for tokens/cost; pulsing
-`running` badge; route transitions = fade + slight slide. Gate on `prefers-reduced-motion`.
-
-## Effects
-Subtle glass cards (`bg-slate-800/60` + `backdrop-blur` + `border-slate-700`); soft elevation
-shadows; minimal glow on the active node / key metric (`text-shadow: 0 0 10px` low alpha).
-
-## Fonts CSS import (if not using next/font)
-```css
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-```
+fade-up** for new feed entries (+ `layout`); animated number counters; pulsing `running` badge; route
+transitions = fade + slight slide. Gate on `prefers-reduced-motion`.
 
 ## Avoid (anti-patterns)
-- **Slow/janky updates** — the monitor must feel live (batch/virtualize high-frequency events).
-- Emojis as icons → **Lucide** SVG (consistent 24×24). Layout-shifting hovers. Low-contrast
-  muted text / invisible borders. Instant state changes. Invisible focus states. Raw `var()` in markup.
+- A second accent color (everything interactive is Action Blue). Shadows on UI. Gradients. Weight 500.
+- Rounding full-bleed tiles; mixing radius grammars; body line-height < 1.47.
+- Emojis as icons → **Lucide** SVG. Layout-shifting hovers. Low-contrast text / invisible focus. Raw `var()` in markup.
 
 ## Pre-delivery checklist
-- [ ] Lucide SVG icons only · consistent set & sizing
-- [ ] `cursor-pointer` + clear hover feedback on interactive elements
-- [ ] Transitions 150–300ms; `prefers-reduced-motion` respected
+- [ ] Single Action Blue accent; no shadows on UI (only `.shadow-product` on imagery)
+- [ ] Inter loaded; no weight-500; body 17px; Apple-tight tracking on headings
+- [ ] Pill buttons with `scale(0.96)` press; hairline shadowless cards (radius 18)
+- [ ] Light default + working dark toggle; both token sets correct
+- [ ] Lucide icons only; `cursor-pointer` + clear feedback; transitions 150–300ms; reduced-motion respected
 - [ ] Text contrast ≥ 4.5:1; visible focus rings; inputs labeled; icon buttons `aria-label`
 - [ ] Status shown by icon + text, not color alone
 - [ ] Responsive 375 / 768 / 1024 / 1440; no horizontal scroll
-- [ ] Charts have a table/text fallback; streaming charts have a pause control

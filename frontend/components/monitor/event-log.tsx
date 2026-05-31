@@ -3,13 +3,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { WsEventData } from "@/lib/types";
 
+// Theme-aware via CSS vars (these are used as a plain inline `color`).
 const TYPE_COLOR: Record<string, string> = {
-  step_start: "#6366f1",
-  step_end: "#64748b",
-  llm_chunk: "#818cf8",
-  tool_call: "#2dd4bf",
-  error: "#ef4444",
-  run_complete: "#22c55e",
+  step_start: "var(--color-running)",
+  step_end: "var(--color-cancelled)",
+  llm_chunk: "var(--color-chart-4)",
+  tool_call: "var(--color-pending)",
+  error: "var(--color-failed)",
+  run_complete: "var(--color-completed)",
 };
 
 function summarize(e: WsEventData): string {
@@ -43,7 +44,7 @@ export function EventLog({ events }: { events: WsEventData[] }) {
             transition={{ duration: 0.18 }}
             className="flex items-start gap-2"
           >
-            <span className="shrink-0" style={{ color: TYPE_COLOR[e.type] ?? "#94a3b8" }}>
+            <span className="shrink-0" style={{ color: TYPE_COLOR[e.type] ?? "var(--color-muted-foreground)" }}>
               {e.type}
             </span>
             <span className="min-w-0 flex-1 truncate text-muted-foreground">{summarize(e)}</span>

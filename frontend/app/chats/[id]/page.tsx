@@ -68,7 +68,7 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card/40">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin p-4">
           <ChatThread runs={runs} activeRunId={activeRunId} stream={stream} optimistic={optimistic} />
           <div ref={bottomRef} />

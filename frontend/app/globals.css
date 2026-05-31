@@ -39,88 +39,127 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* Yuno semantic status (-> RunStatus) + brand */
-  --color-brand: #6366f1;
-  --color-running: #6366f1;
-  --color-completed: #22c55e;
-  --color-failed: #ef4444;
-  --color-pending: #f59e0b;
-  --color-cancelled: #64748b;
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
+
+  /* --- Apple surface helpers (used by tiles / heroes / on-dark copy) --- */
+  --color-parchment: var(--parchment);
+  --color-pearl: var(--pearl);
+  --color-ink: var(--ink);
+  --color-tile: var(--tile);
+  --color-tile-2: var(--tile-2);
+  --color-sky: var(--sky);
+  --color-hairline: var(--hairline);
+
+  /* Yuno semantic status (-> RunStatus) + brand. Apple system colors, legible
+     on both white cards and near-black tiles. */
+  --color-brand: #0066cc;
+  --color-running: #0a84ff;
+  --color-completed: #34c759;
+  --color-failed: #ff3b30;
+  --color-pending: #ff9500;
+  --color-cancelled: #8e8e93;
+
+  /* Apple radius grammar: sm 8 · md 11 · lg(card) 14 · xl(card) 18 · pill via rounded-full */
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
 }
 
+/* ===========================================================================
+   LIGHT is the default (Apple is light-first): parchment page canvas, white
+   cards (which pop without shadows), near-black ink, single Action Blue accent.
+   =========================================================================== */
 :root {
-  --radius: 0.6rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #16a34a;
-  --primary-foreground: #f0fdf4;
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: #ef4444;
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: #6366f1;
-  --chart-1: #6366f1;
-  --chart-2: #22c55e;
-  --chart-3: #f59e0b;
-  --chart-4: #2dd4bf;
-  --chart-5: #ef4444;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: #6366f1;
+  --radius: 14px;
+  --background: #f5f5f7;        /* parchment */
+  --foreground: #1d1d1f;        /* ink */
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0066cc;          /* Action Blue — the single accent */
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #1d1d1f;
+  --muted: #ececef;
+  --muted-foreground: #6e6e73;  /* Apple secondary label */
+  --accent: #ededf0;            /* hover / pressed fill */
+  --accent-foreground: #1d1d1f;
+  --destructive: #d70015;       /* Apple red, dark enough on white */
+  --border: #d2d2d7;            /* Apple hairline */
+  --input: #d2d2d7;
+  --ring: #0071e3;              /* focus blue */
+  --chart-1: #0066cc;
+  --chart-2: #34c759;
+  --chart-3: #ff9500;
+  --chart-4: #5ac8fa;
+  --chart-5: #ff3b30;
+
+  /* Apple surface helpers */
+  --parchment: #f5f5f7;
+  --pearl: #fafafc;
+  --ink: #1d1d1f;
+  --tile: #272729;
+  --tile-2: #2a2a2c;
+  --sky: #2997ff;
+  --hairline: #d2d2d7;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #0066cc;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: #e0e0e0;
+  --sidebar-ring: #0071e3;
 }
 
-/* Dark-first: the app forces .dark on <html> (developer dashboard). */
+/* ===========================================================================
+   DARK = Apple's near-black tiles on true black, Sky Blue accent. Toggled via
+   the .dark class (next-themes), no longer force-locked on <html>.
+   =========================================================================== */
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #22c55e;
-  --primary-foreground: #052e16;
-  --secondary: #1e293b;
-  --secondary-foreground: #f1f5f9;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #243049;
-  --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
-  --border: rgb(255 255 255 / 0.08);
-  --input: rgb(255 255 255 / 0.14);
-  --ring: #6366f1;
-  --chart-1: #6366f1;
-  --chart-2: #22c55e;
-  --chart-3: #f59e0b;
-  --chart-4: #2dd4bf;
-  --chart-5: #ef4444;
-  --sidebar: #0b1120;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #22c55e;
-  --sidebar-primary-foreground: #052e16;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: rgb(255 255 255 / 0.08);
-  --sidebar-ring: #6366f1;
+  --background: #000000;        /* true black */
+  --foreground: #f5f5f7;
+  --card: #1d1d1f;              /* near-black tile */
+  --card-foreground: #f5f5f7;
+  --popover: #1d1d1f;
+  --popover-foreground: #f5f5f7;
+  --primary: #2997ff;           /* Sky Blue — Action Blue disappears on dark */
+  --primary-foreground: #ffffff;
+  --secondary: #1d1d1f;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1d1d1f;
+  --muted-foreground: #98989d;  /* Apple dark secondary label */
+  --accent: #272729;
+  --accent-foreground: #f5f5f7;
+  --destructive: #ff453a;       /* Apple dark red */
+  --border: rgb(255 255 255 / 0.12);
+  --input: rgb(255 255 255 / 0.16);
+  --ring: #2997ff;
+  --chart-1: #2997ff;
+  --chart-2: #30d158;
+  --chart-3: #ff9f0a;
+  --chart-4: #64d2ff;
+  --chart-5: #ff453a;
+
+  --parchment: #1d1d1f;
+  --pearl: #272729;
+  --ink: #f5f5f7;
+  --tile: #272729;
+  --tile-2: #2a2a2c;
+  --sky: #2997ff;
+  --hairline: rgb(255 255 255 / 0.12);
+
+  --sidebar: #000000;           /* Apple true-black nav */
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #2997ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1d1d1f;
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: rgb(255 255 255 / 0.1);
+  --sidebar-ring: #2997ff;
 }
 
 @layer base {
@@ -129,16 +168,52 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Apple-tight: SF-like rendering + a hair of negative tracking */
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans antialiased;
+  }
+  /* Apple headlines: weight 600 (never 700 by default) with tighter tracking */
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    letter-spacing: -0.022em;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   ::selection {
-    background: color-mix(in oklab, var(--brand) 35%, transparent);
+    background: color-mix(in oklab, var(--primary) 28%, transparent);
+  }
+}
+
+@layer components {
+  /* Apple display type — for heroes and page headers. */
+  .text-hero {
+    font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+    line-height: 1.07;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+  }
+  .text-display {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .text-lead {
+    font-size: 1.3125rem;       /* 21px tagline */
+    line-height: 1.38;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--muted-foreground);
+  }
+  /* The system's single drop-shadow — reserved for "product" imagery only. */
+  .shadow-product {
+    box-shadow: 0 5px 30px 3px rgb(0 0 0 / 0.22);
   }
 }
 

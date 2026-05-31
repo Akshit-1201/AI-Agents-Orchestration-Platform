@@ -4,6 +4,7 @@ import "@xyflow/react/dist/style.css";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   addEdge,
   Background,
@@ -29,6 +30,7 @@ const nodeTypes = { agent: AgentNode };
 
 export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
   const { data: agents } = useAgents();
   const agentsById = useMemo(
     () => new Map((agents ?? []).map((a) => [a.id, a])),
@@ -263,11 +265,12 @@ export function FlowCanvas({ workflow }: { workflow: WorkflowDetail }) {
               setSelEdge(null);
             }}
             fitView
+            colorMode={resolvedTheme === "dark" ? "dark" : "light"}
             proOptions={{ hideAttribution: true }}
-            defaultEdgeOptions={{ style: { stroke: "#475569" } }}
+            defaultEdgeOptions={{ style: { stroke: "var(--color-muted-foreground)" } }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#1e293b" />
-            <Controls className="!rounded-md !border !border-border !bg-card" />
+            <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="var(--color-border)" />
+            <Controls className="!rounded-lg !border !border-border !bg-card" />
           </ReactFlow>
         </div>
 

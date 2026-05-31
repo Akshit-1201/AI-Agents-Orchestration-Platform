@@ -20,31 +20,32 @@ export function TokenCostChart({ messages }: { messages: WsMessageData[] }) {
       <AreaChart data={data} margin={{ top: 6, right: 6, bottom: 0, left: -18 }}>
         <defs>
           <linearGradient id="tokGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6366f1" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis dataKey="step" hide />
         <YAxis
           width={34}
-          tick={{ fontSize: 10, fill: "#64748b" }}
+          tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }}
           axisLine={false}
           tickLine={false}
         />
         <Tooltip
           contentStyle={{
-            background: "#1e293b",
-            border: "1px solid #334155",
-            borderRadius: 8,
+            background: "var(--color-popover)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 11,
             fontSize: 12,
           }}
-          labelStyle={{ color: "#94a3b8" }}
+          labelStyle={{ color: "var(--color-muted-foreground)" }}
+          itemStyle={{ color: "var(--color-foreground)" }}
           formatter={(v) => [`${Number(v).toLocaleString()} tokens`, "cumulative"]}
         />
         <Area
           type="monotone"
           dataKey="tokens"
-          stroke="#6366f1"
+          stroke="var(--color-primary)"
           strokeWidth={2}
           fill="url(#tokGrad)"
         />

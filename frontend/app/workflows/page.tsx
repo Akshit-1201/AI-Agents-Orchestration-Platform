@@ -60,14 +60,14 @@ export default function WorkflowsPage() {
                   open();
                 }
               }}
-              className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/60 p-4 text-left transition-colors hover:border-border/80 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
                 <WorkflowIcon className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="truncate font-medium">{w.name}</p>
+                  <p className="truncate font-semibold">{w.name}</p>
                   {w.is_template ? (
                     <span className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
                       template

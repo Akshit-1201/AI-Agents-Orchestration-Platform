@@ -33,7 +33,7 @@ function Bubble({
       <span
         className={cn(
           "mt-0.5 grid size-7 shrink-0 place-items-center rounded-full",
-          isUser ? "bg-primary/15 text-primary" : "bg-brand/15 text-brand",
+          isUser ? "bg-muted text-foreground" : "bg-brand/15 text-brand",
         )}
       >
         {isUser ? <User className="size-3.5" /> : <Bot className="size-3.5" />}

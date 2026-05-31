@@ -48,14 +48,14 @@ export default function AgentsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.2) }}
-              className="group flex flex-col rounded-xl border border-border bg-card/60 p-4 transition-colors hover:border-border/80 hover:bg-card"
+              className="group flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-foreground/20"
             >
               <div className="flex items-start gap-3">
                 <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
                   <Bot className="size-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{a.name}</p>
+                  <p className="truncate font-semibold">{a.name}</p>
                   <p className="truncate text-xs text-muted-foreground">{a.role}</p>
                 </div>
               </div>

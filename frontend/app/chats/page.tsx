@@ -66,13 +66,13 @@ export default function ChatsPage() {
                     open();
                   }
                 }}
-                className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-border bg-card/60 p-4 text-left transition-colors hover:border-border/80 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group flex w-full cursor-pointer items-center gap-4 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand/15 text-brand">
                   <MessageSquare className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{c.title}</p>
+                  <p className="truncate font-semibold">{c.title}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     {wfName.get(c.workflow_id) ?? `Workflow #${c.workflow_id}`} ·{" "}
                     {fmtRelative(c.updated_at)}

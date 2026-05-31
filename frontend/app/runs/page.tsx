@@ -67,7 +67,7 @@ export default function RunsPage() {
                     open();
                   }
                 }}
-                className="group flex w-full cursor-pointer items-center gap-4 border-b border-border bg-card/40 px-4 py-3 text-left text-sm transition-colors last:border-0 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group flex w-full cursor-pointer items-center gap-4 border-b border-border bg-card px-4 py-3 text-left text-sm transition-colors last:border-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="w-12 font-mono text-xs text-muted-foreground">#{r.id}</span>
                 <StatusBadge status={r.status} />
