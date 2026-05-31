@@ -5,6 +5,8 @@ import type {
   Chat,
   ChatCreate,
   ChatDetail,
+  KnowledgeSource,
+  KnowledgeUploadResult,
   Run,
   RunCreate,
   RunDetail,
@@ -28,9 +30,14 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // For FormData (file uploads) let the browser set the multipart Content-Type + boundary.
+  const isForm = init?.body instanceof FormData;
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    headers: {
+      ...(isForm ? {} : { "Content-Type": "application/json" }),
+      ...(init?.headers ?? {}),
+    },
   });
   if (!res.ok) {
     let detail = res.statusText;
@@ -86,6 +93,16 @@ export const api = {
     }),
   deleteRun: (id: number) =>
     request<void>(`/runs/${id}`, { method: "DELETE" }),
+
+  // knowledge base (RAG)
+  listKnowledge: () => request<KnowledgeSource[]>("/knowledge"),
+  uploadKnowledge: (files: File[]) => {
+    const fd = new FormData();
+    for (const f of files) fd.append("files", f);
+    return request<KnowledgeUploadResult>("/knowledge/upload", { method: "POST", body: fd });
+  },
+  deleteKnowledge: (source: string) =>
+    request<void>(`/knowledge?source=${encodeURIComponent(source)}`, { method: "DELETE" }),
 
   // chats
   listChats: () => request<Chat[]>("/chats"),

@@ -21,10 +21,11 @@ export const qk = {
   run: (id: number) => ["runs", id] as const,
   chats: ["chats"] as const,
   chat: (id: number) => ["chats", id] as const,
+  knowledge: ["knowledge"] as const,
 };
 
 const errMsg = (e: unknown) =>
-  e instanceof ApiError ? e.message : "Something went wrong";
+  e instanceof ApiError ? e.message : "Could not reach the server — is the backend running?";
 
 // --------------------------- Agents ---------------------------
 export const useAgents = () =>
@@ -184,6 +185,36 @@ export function useDeleteChat() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.chats });
       toast.success("Chat deleted");
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+// --------------------------- Knowledge base (RAG) ---------------------------
+export const useKnowledge = () =>
+  useQuery({ queryKey: qk.knowledge, queryFn: api.listKnowledge });
+
+export function useUploadKnowledge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (files: File[]) => api.uploadKnowledge(files),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: qk.knowledge });
+      const n = res.total_chunks;
+      const skip = res.skipped.length ? ` · ${res.skipped.length} skipped (no text)` : "";
+      toast.success(`Ingested ${n} chunk${n === 1 ? "" : "s"}${skip}`);
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  });
+}
+
+export function useDeleteKnowledge() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (source: string) => api.deleteKnowledge(source),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.knowledge });
+      toast.success("Document removed");
     },
     onError: (e) => toast.error(errMsg(e)),
   });

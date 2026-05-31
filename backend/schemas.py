@@ -182,3 +182,15 @@ class ChatReadDetail(ChatRead):
 
 class ChatMessageCreate(SQLModel):
     input: str
+
+
+# --------------------------- Knowledge base (RAG) --------------------------- #
+class KnowledgeSource(SQLModel):
+    source: str
+    chunks: int
+
+
+class KnowledgeUploadResult(SQLModel):
+    results: List[KnowledgeSource] = Field(default_factory=list)
+    total_chunks: int
+    skipped: List[str] = Field(default_factory=list)  # uploaded but yielded no text

@@ -191,6 +191,17 @@ export interface ChatCreate {
   title?: string | null;
 }
 
+// --- Knowledge base (RAG) ---
+export interface KnowledgeSource {
+  source: string;
+  chunks: number;
+}
+export interface KnowledgeUploadResult {
+  results: KnowledgeSource[];
+  total_chunks: number;
+  skipped: string[];
+}
+
 // --- WebSocket envelopes (WS /ws/runs/{id}) — not in OpenAPI ---
 export interface WsEventData {
   id: number;

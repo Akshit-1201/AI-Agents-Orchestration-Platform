@@ -4,13 +4,19 @@ Chroma persists to `settings.vector_store_dir`; embeddings go through the same
 OpenAI->Ollama fallback as the LLMs (deterministic fake in tests).
 """
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from langchain_chroma import Chroma
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+# Keep the app fully local: disable Chroma's anonymized telemetry (also avoids a
+# background telemetry thread that can outlive a request's event loop). Must be set
+# before chromadb is imported.
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
-from config import settings
+from langchain_chroma import Chroma  # noqa: E402
+from langchain_text_splitters import RecursiveCharacterTextSplitter  # noqa: E402
+
+from config import settings  # noqa: E402
 
 logger = logging.getLogger("yuno.runtime.rag")
 
@@ -75,3 +81,31 @@ def retrieve(query: str, collection: str = "default", k: Optional[int] = None) -
     return "\n\n".join(
         f"[source: {d.metadata.get('source', '?')}] {d.page_content}" for d in docs
     )
+
+
+def list_sources(collection: str = "default") -> List[dict]:
+    """Distinct ingested documents with their chunk counts (reads the store live).
+
+    Reads only metadata, so it works even when no embedding backend is reachable.
+    """
+    vs = get_vectorstore(collection)
+    try:
+        got = vs._collection.get(include=["metadatas"])
+    except Exception as e:  # noqa: BLE001
+        logger.warning("list_sources failed: %s", e)
+        return []
+    counts: dict = {}
+    for md in got.get("metadatas") or []:
+        src = (md or {}).get("source") or "?"
+        counts[src] = counts.get(src, 0) + 1
+    return [{"source": s, "chunks": c} for s, c in sorted(counts.items())]
+
+
+def delete_source(source: str, collection: str = "default") -> int:
+    """Remove every chunk belonging to one document `source`. Returns the count removed."""
+    col = get_vectorstore(collection)._collection
+    existing = col.get(where={"source": source})
+    ids = existing.get("ids") or []
+    if ids:
+        col.delete(ids=ids)
+    return len(ids)
