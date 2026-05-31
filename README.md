@@ -9,7 +9,7 @@ visual web UI and **runs fully local with a single command**.
 
 ## Demo
 
-📹 _Recorded walkthrough: **[link to your video/gif]**_ — create agents → run a 2-agent workflow →
+📹 **[▶ Watch the demo](https://drive.google.com/file/d/1DIbm8yPyGLh62HXB6lcfDO1dzflVZTx1/view?usp=drive_link)** — create agents → run a 2-agent workflow →
 live monitor (logs, inter-agent messages, token/cost) → a live Telegram conversation with an agent.
 
 ---
